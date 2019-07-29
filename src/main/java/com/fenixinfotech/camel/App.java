@@ -3,6 +3,8 @@ package com.fenixinfotech.camel;
 import org.apache.camel.CamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.servlet.CamelHttpTransportServlet;
+import org.apache.camel.model.rest.RestBindingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,16 +29,47 @@ public class App {
     @Bean
     public CommandLineRunner commandLineRunner(ApplicationContext applicationContext) {
 
-        return args -> {
+        logger.info("bootstrapping camel app");
 
+        return args -> {
+/*
+            // file
+            logger.info("adding file route");
             camelContext.addRoutes(new RouteBuilder() {
 
                 @Override
                 public void configure() throws Exception {
-                    logger.info("bootstrapping camel app");
+
                     from("file:src/test/routes/data?noop=true")
                             .log(LoggingLevel.INFO, "firing route")
                             .to("file:target/test/routes/output");
+                }
+            });
+*/
+            // servlet
+            logger.info("adding servlet route");
+            camelContext.addRoutes(new RouteBuilder() {
+
+                @Override
+                public void configure() throws Exception {
+/*
+                    restConfiguration().component("servlet")
+                            .bindingMode(RestBindingMode.auto)
+                            .apiContextPath("/api-doc")
+                            .apiProperty("api.title", "User API").apiProperty("api.version", "1.2.3")
+                            // and enable CORS
+                            .apiProperty("cors", "true");
+                    ;
+*/
+                    rest("ping")
+                            .description("Ping service")
+                            .get()
+//                            .get("/hello")
+                            .to("direct:hello");
+
+                    from("direct:hello")
+                            .log(LoggingLevel.INFO, "Hello World Direct")
+                            .transform().simple("Hello World");
                 }
             });
         };
